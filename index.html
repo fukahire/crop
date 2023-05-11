@@ -12,48 +12,34 @@
 </head>
 <body class=" overflow-y-scroll">
     <div class="mx-auto w-[1100px]" id="app">
-        <h3 class="text-center text-lg mb-4">全台作物防災告警</h3>
-        <!-- <ul class="" v-for="item in disaster">
-            <li value="item">{{item}}</li>
-        </ul> -->
+        <h3 class="text-center text-lg mb-4">作物生育期查詢</h3>
         <div class="flex flex-row gap-8 justify-center mb-4">
-            <select @click="changedisaster" v-model="chosendisaster" class="w-32 bg-orange-200 p-2 leading-normal">
-                <option value="" selected="selected" class="bg-orange-300 p-2">選擇農災</option>
-                <option v-for="item in disaster" :value="item">{{item}}</option>
+            <select @click="changeattributes" v-model="chosenattributes" class="w-40 bg-orange-200 p-2 leading-normal">
+                <option value="" selected="selected" class="bg-orange-300 p-2">選擇採收方式</option>
+                <option v-for="item in attributes" :value="item">{{item}}</option>
             </select>
-            <select @click="changetown" v-model="chosentown" class="w-32 bg-orange-200 p-2 leading-normal">
-                <option value="" selected="selected">選擇地區</option>
-                <option v-for="item in town" :value="item">{{item}}</option>
-            </select>
-            <select @click="changecname" v-model="chosencname" class="w-32 bg-orange-200 p-2 leading-normal">
-                <option value="" selected="selected">選擇農作</option>
+            <select @click="changecname" v-model="chosencname" class="w-40 bg-orange-200 p-2 leading-normal">
+                <option value="" selected="selected">選擇作物</option>
                 <option v-for="item in cname" :value="item">{{item}}</option>
+            </select>
+            <select @click="changesurvey" v-model="chosensurvey" class="w-40 bg-orange-200 p-2 leading-normal">
+                <option value="" selected="selected">選擇分類</option>
+                <option v-for="item in survey" :value="item">{{item}}</option>
             </select>
         </div>
         <ul class="grid grid-cols-3 grid-flow-row gap-4">
             <li class="rounded-md bg-slate-200 p-4 leading-normal" v-for="item in content" v-if="">
-                <div class="bg-neutral-600 rounded-sm p-1 my-1 text-white">{{item["TOWN_NAME"]}}</div>
+                <div class="bg-neutral-600 rounded-sm p-1 my-1 text-white">{{item["ATTRIBUTES"]}}</div>
                 <div class="flex justify-between align-center">
-                    <div><span class="rounded-sm bg-red-300 p-1 my-1 text-white">{{item["Disaster"]}}</span><span class="rounded-sm bg-red-300 p-1 my-1 text-white">{{item["C_NAME"]}}</span></div>
-                    <div>
-                        <!-- <span class="rounded-sm bg-slate-500 p-1 my-1 text-white" v-show="{item["GROWTH"] != 0}">{{item["GROWTH"]}}</span> -->
-                        <span class="rounded-sm bg-teal-400 p-1 my-1 text-white">{{item["PERIOD"]}}</span></div>
+                    <span class="rounded-sm bg-red-300 p-1 my-1 text-white">{{item["V_NAME"]}}</span>
+                    <span class="rounded-sm bg-teal-400 p-1 my-1 text-white">{{item["C_NAME"]}}</span>
                 </div>
-                <div><span>影響：</span>{{item["EFFECT"]}}</div>
-                <div><span>預防：</span>{{item["PREVENTION"]}}</div>
-                <div><span>處理：</span>{{item["RECOVERY"]}}</div>
+                <div><span>生長期：</span>{{item["PERIODS_VEGETATIVE_GROWTH"]}}天</div>
+                <div><span>開花期：</span>{{item["PERIODS_FLOWERING"]}}天</div>
+                <div><span>結果期：</span>{{item["PERIODS_FRUIT_DEVELOPMENT"]}}天</div>
+                <div><span>收獲期：</span>{{item["PERIODS_HARVEST"]}}天</div>
+                <div><span>繁殖期：</span>{{item["DAY_FERTILITY"]}}天</div>
             </li>
-            <!-- <li class="rounded-md p-4 leading-normal"></li>
-            <li class="rounded-md p-4 leading-normal"></li>
-            <li class="rounded-md p-4 leading-normal"></li>
-            <li class="rounded-md p-4 leading-normal"></li>
-            <li class="rounded-md p-4 leading-normal"></li> -->
-            <!-- <div>
-                <button type="button" v-show="week.id > 0" @click="selectemployee(-1)"
-                    class="btn btn-primary btn-lg">Previous</button>
-                <button type="button" v-show="week.id < 2" @click="selectemployee(1)"
-                    class="btn btn-secondary btn-lg">Next</button>
-            </div> -->
         </ul>
     </div>
 </body>
@@ -64,20 +50,19 @@
         data:{
             crops:[],
             cname:[],
-            town:[],
-            disaster:[],
-            period:[],
+            attributes:[],
+            survey:[],
+            vname:[],
             growth:[],
-            stage:[],
+            flowering:[],
+            fruit:[],
+            harvest:[],
+            fertility:[],
             content:[],
-            optiontown:[],
-            chosendisaster:'',
-            chosentown:'',
+            optioncname:[],
+            chosenattributes:'',
             chosencname:'',
-            paging:{
-                type:Array,
-                default:() =>[],
-            }
+            chosensurvey:'',
         },
         created(){
             let vm = this;
@@ -85,17 +70,20 @@
                 const place = vm.crops.map((item) => item[val]);
                 return place.filter((item, index) => place.indexOf(item) == index);
             }
-            axios('https://api.kcg.gov.tw/api/service/get/1fb9ea3e-eb25-4fe5-865b-8b5bd14c35c6')
+            axios('https://api.kcg.gov.tw/api/service/get/a5adfb5a-708e-443f-a2da-acb80a7fed61')
                 .then(function(response){
                     vm.data = response.data.data;
-                    vm.crops = vm.data.crops;
+                    vm.crops = vm.data;
                     // 
                     vm.cname = fil("C_NAME");
-                    vm.town = fil("TOWN_NAME");
-                    vm.disaster = fil("Disaster");
-                    vm.period = fil("PERIOD");
-                    vm.growth = fil("GROWTH");
-                    vm.stage = fil("STAGE");
+                    vm.attributes = fil("ATTRIBUTES");
+                    vm.survey = fil("NAME_SURVEY");
+                    vm.vname = fil("V_NAME");
+                    vm.growth = fil("PERIODS_VEGETATIVE_GROWTH");
+                    vm.flowering = fil("PERIODS_FLOWERING");
+                    vm.fruit = fil("PERIODS_FRUIT_DEVELOPMENT");
+                    vm.harvest = fil("PERIODS_HARVEST");
+                    vm.fertility = fil("DAY_FERTILITY");
                     vm.content = vm.crops;
                 })
                 .catch( (error) => console.log(error));
@@ -103,23 +91,23 @@
             // conosle.log(vm.crops)
         },
         methods:{
-            changedisaster:function(){
+            changeattributes:function(){
                 const vm = this;
                 function fil(val){
                 const place = vm.content.map((item) => item[val]);
                 return place.filter((item, index) => place.indexOf(item) == index);}
                 
-                if(vm.chosendisaster == ''){
+                if(vm.chosenattributes == ''){
                     vm.content = vm.content;
                 }else{
-                    vm.content = vm.crops.filter(function(item){return item["Disaster"] == vm.chosendisaster});
-                    vm.town = fil("TOWN_NAME");
-                    vm.chosentown = '';
-                    vm.chosencname = '';
+                    vm.content = vm.crops.filter(function(item){return item["ATTRIBUTES"] == vm.chosenattributes});
                     vm.cname = fil("C_NAME");
+                    vm.chosencname = '';
+                    vm.chosensurvey = '';
+                    vm.survey = fil("NAME_SURVEY");
                 }
             },
-            changetown:function(){
+            changecname:function(){
                 const vm = this;
                 function fil(val){
                 const place = vm.content.map((item) => item[val]);
@@ -127,52 +115,24 @@
                 }
                 console.log(vm.content)
                 // 重置選項
-                if(vm.chosentown == ''){
-                    vm.content = vm.content;
-                }else{
-                    vm.content = vm.crops.filter(function(item){return item["Disaster"] == vm.chosendisaster}).filter(function(item){return item["TOWN_NAME"] == vm.chosentown});
-                    vm.cname = fil("C_NAME");
-                    vm.chosencname = '';
-                }
-                console.log(vm.content)
-            },
-            changecname:function(){
-                const vm = this;
                 if(vm.chosencname == ''){
                     vm.content = vm.content;
                 }else{
-                    vm.content = vm.crops.filter(function(item){return item["Disaster"] == vm.chosendisaster}).filter(function(item){return item["TOWN_NAME"] == vm.chosentown}).filter(function(item){return item["C_NAME"] == vm.chosencname});
+                    vm.content = vm.crops.filter(function(item){return item["ATTRIBUTES"] == vm.chosenattributes}).filter(function(item){return item["C_NAME"] == vm.chosencname});
+                    vm.survey = fil("NAME_SURVEY");
+                    vm.chosensurvey = '';
+                }
+                console.log(vm.content)
+            },
+            changesurvey:function(){
+                const vm = this;
+                if(vm.chosensurvey == ''){
+                    vm.content = vm.content;
+                }else{
+                    vm.content = vm.crops.filter(function(item){return item["ATTRIBUTES"] == vm.chosenattributes}).filter(function(item){return item["C_NAME"] == vm.chosencname}).filter(function(item){return item["NAME_SURVEY"] == vm.chosensurvey});
                 }
             },
-            // cardnum:function(w){
-            //     const num = Math.floor( w/9 );
-            //     return this.cardnum[w]
-            // }
-            // selectemployee(w) {
-            //     this.week.id += w
-            //     this.week.id === 0 ? this.week.title = "current week" : this.week.id === 1 ? this.week.title = "next week" : this.week.title = "week after"
-            // }
         }
-    //      {
-    //     "Disaster": "乾旱",
-    //     "GROWTH": "開花期、結果期",
-    //     "STAGE": "開花期到果實發育期",
-    //     "TAIWAN_GEOCODE_103": "64",
-    //     "CITY_NAME": "高雄市",
-    //     "TOWN_NAME": "大社區",
-    //     "C_NAME": "文旦柚",
-    //     "YEAR": "111",
-    //     "PERIOD": "一期作",
-    //     "Note": 0,
-    //     "DURATION": "720",
-    //     "THRESHOLD": "40",
-    //     "MEASURES": "毫米（mm）",
-    //     "EFFECT": "月降雨量小於40mm。葉片萎凋、開花期易落花、幼果至果實肥大期易有落果。",
-    //     "PREVENTION": "加強灌溉、設理蓄水池及灌溉系統、草生栽培。",
-    //     "RECOVERY": "均勻灌溉、修剪枝葉減少水分蒸散。",
-    //     "TIMESTAMP": "2023-05-08T12:05:00",
-    //     "REAL_VALUE": "26.0mm"
-    //   },
     })
 </script>
 </html>
