@@ -22,9 +22,9 @@
                 <option value="" selected="selected">選擇作物</option>
                 <option v-for="item in cname" :value="item">{{item}}</option>
             </select>
-            <select @click="changesurvey" v-model="chosensurvey" class="w-40 bg-orange-200 p-2 leading-normal">
+            <select @click="changesurvey <2 ? null : changesurvey" v-model="chosensurvey" class="w-40 bg-orange-200 p-2 leading-normal">
                 <option value="" selected="selected">選擇分類</option>
-                <option v-for="item in survey" :value="item">{{item}}</option>
+                <option v-for="item in survey" :value="item" :disabled="isdisable">{{item}}</option>
             </select>
         </div>
         <ul class="grid grid-cols-3 grid-flow-row gap-4">
@@ -85,6 +85,7 @@
                     vm.harvest = fil("PERIODS_HARVEST");
                     vm.fertility = fil("DAY_FERTILITY");
                     vm.content = vm.crops;
+                    vm.isdisable = true;
                 })
                 .catch( (error) => console.log(error));
             
@@ -121,6 +122,11 @@
                     vm.content = vm.crops.filter(function(item){return item["ATTRIBUTES"] == vm.chosenattributes}).filter(function(item){return item["C_NAME"] == vm.chosencname});
                     vm.survey = fil("NAME_SURVEY");
                     vm.chosensurvey = '';
+                    if (vm.survey.length <2){
+                        vm.isdisable = true;
+                    }else{
+                        vm.isdisable = false;
+                    }
                 }
                 console.log(vm.content)
             },
